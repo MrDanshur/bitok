@@ -34,7 +34,6 @@ foreach ($jsonPairs["pairs"] as $pairKey => $pairValues) {
 //    echo $combination["r"] . " => " . $combination["d"] . PHP_EOL;
 //}
 
-$chains = [];
 $i = 0;
 $j = 0;
 
@@ -56,33 +55,20 @@ while ($i < $countPairs) {
             $possible[$combination["r"]][] = $combination["d"];
         }
 
-
-//        echo $combination["d"] . " ";
-//        if ($combination["r"] === $startCur) {
-//            $chains[$j][] = $combination["d"];
-//            continue;
-//        }
-//        if (in_array($combination["r"], $chains[$j])) {
-//            $chains[$j][] = $combination["d"];
-//        }
-
         $j++;
     }
     $i++;
 }
 
-$i = 0;
-foreach ($possible as $key => $values) {
-    if ($key !== $startCur) {
-        continue;
-    }
-    foreach ($values as $value) {
-        $chains[$i][] = $key;
-        $chains[$i][] = $value;
-        $i++;
-    }
+
+$chains = [];
+// Generate first 2 elements in chain. FIrst - USD, 2nd - to can USD can be converted
+foreach ($possible[$startCur] as $key => $value) {
+    $chains[$key][] = $startCur;
+    $chains[$key][] = $value;
 }
-unset($possible[$startCur]);
+
+unset($possible[$startCur]); // delete USD from possible
 
 //Generate all possibale chaines.
 foreach ($possible as $kPosses => $vPosses) {
@@ -138,19 +124,11 @@ $end2 = microtime(true);
 
 $requestTime = $end - $start;
 $parseTime = $end2 - $end;
-echo "1: $requestTime";
+echo " 1: $requestTime";
 echo " 2: $parseTime";
 
 
 function isToken($pair)
 {
     return 0 === strpos($pair, substr($pair, -3)); // first 3 chars = last 3 chars
-}
-
-function endsWith($haystack, $needle)
-{
-    $length = strlen($needle);
-
-    return $length === 0 ||
-           (substr($haystack, -$length) === $needle);
 }
