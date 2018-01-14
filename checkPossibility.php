@@ -57,7 +57,6 @@ while ($i < $countPairs) {
         }
 
 
-
 //        echo $combination["d"] . " ";
 //        if ($combination["r"] === $startCur) {
 //            $chains[$j][] = $combination["d"];
@@ -83,62 +82,68 @@ foreach ($possible as $key => $values) {
         $i++;
     }
 }
+unset($possible[$startCur]);
 
-$j = 0;
-foreach ($chains as $keyChain => $ChainValues) {
-    foreach ($possible as $keyPos => $posValues) {
-        $countFromTo = count($posValues);
-        foreach ($posValues as $curency) {
-            if (in_array($curency, $chains[$keyChain])) {
-                if ($startCur == $curency && count($chains[$keyChain]) > 1) {
-                    $chains[$keyChain][] = $curency;
-                }
+//Generate all possibale chaines.
+foreach ($possible as $kPosses => $vPosses) {
+    foreach ($chains as $kChain => $vChains) {
+        if (end($vChains) === $startCur) {
+            continue;
+        }
+
+        if ($kPosses !== end($vChains)) {
+            continue;
+        }
+
+        $puts = [];
+        foreach ($vPosses as $kPos => $vPos) {
+            if (in_array($vPos, $vChains) && $vChains[0] !== $vPos) {
                 continue;
             }
 
-//            if ($startCur == end($chains[$keyChain])) {
-//                continue;
-//            }
-            $chains[]            = $chains[$keyChain];
-            $chains[$keyChain][] = $curency;
+            $puts[] = $vPos;
         }
 
+        if (empty($puts)) {
+            continue;
+        }
 
-
-
-//        if (end($ChainValues) != $key) {
-//            continue;
-//        }
-//        if (!array_key_exists(current($posValues), $chains[$key])) {
-//            $chains[$i][] = current($posValues);
-//        }
-//
-//        foreach ($posValues as $value) {
-//            if (!array_key_exists($value, $chains[$i])) {
-//                $chains[$i][] = current($value);
-//            }
-//
-//            $chains[$i][] = $value;
-//            $i++;
-//        }
-
+        foreach ($puts as $put) {
+            $chains[] = $chains[$kChain];
+            end($chains);
+            $key = key($chains);
+            $chains[$key][] = $put;
+        }
     }
 }
 
+// Delete chains where first and last element is not the same
+foreach ($chains as $kChain => $vChains) {
+    if (current($vChains) !== end($vChains)) {
+        unset($chains[$kChain]);
+    }
+}
 
-
+// Delete chains where only 3 elements. It can't be profittable
+foreach ($chains as $kChain => $vChains) {
+    if (3 === count($vChains)) {
+        unset($chains[$kChain]);
+    }
+}
+sort($chains);
 print_r($chains);
+
 
 $end2 = microtime(true);
 
-$requestTime = $end-$start;
-$parseTime = $end2-$end;
+$requestTime = $end - $start;
+$parseTime = $end2 - $end;
 echo "1: $requestTime";
 echo " 2: $parseTime";
 
 
-
-function isToken($pair) {
+function isToken($pair)
+{
     return 0 === strpos($pair, substr($pair, -3)); // first 3 chars = last 3 chars
 }
 
