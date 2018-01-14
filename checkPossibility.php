@@ -52,7 +52,7 @@ while ($i < $countPairs) {
             $possible[$combination["d"]][] = $combination["r"];
         }
 
-        if (!in_array($combination["d"], $possible[$combination["r"]])) {
+        if (array_key_exists($combination["r"], $possible) && !in_array($combination["d"], $possible[$combination["r"]])) {
             $possible[$combination["r"]][] = $combination["d"];
         }
 
@@ -72,8 +72,62 @@ while ($i < $countPairs) {
     $i++;
 }
 
+$i = 0;
+foreach ($possible as $key => $values) {
+    if ($key !== $startCur) {
+        continue;
+    }
+    foreach ($values as $value) {
+        $chains[$i][] = $key;
+        $chains[$i][] = $value;
+        $i++;
+    }
+}
 
-print_r($possible);
+$j = 0;
+foreach ($chains as $keyChain => $ChainValues) {
+    foreach ($possible as $keyPos => $posValues) {
+        $countFromTo = count($posValues);
+        foreach ($posValues as $curency) {
+            if (in_array($curency, $chains[$keyChain])) {
+                if ($startCur == $curency && count($chains[$keyChain]) > 1) {
+                    $chains[$keyChain][] = $curency;
+                }
+                continue;
+            }
+
+//            if ($startCur == end($chains[$keyChain])) {
+//                continue;
+//            }
+            $chains[]            = $chains[$keyChain];
+            $chains[$keyChain][] = $curency;
+        }
+
+
+
+
+//        if (end($ChainValues) != $key) {
+//            continue;
+//        }
+//        if (!array_key_exists(current($posValues), $chains[$key])) {
+//            $chains[$i][] = current($posValues);
+//        }
+//
+//        foreach ($posValues as $value) {
+//            if (!array_key_exists($value, $chains[$i])) {
+//                $chains[$i][] = current($value);
+//            }
+//
+//            $chains[$i][] = $value;
+//            $i++;
+//        }
+
+    }
+}
+
+
+
+print_r($chains);
 
 $end2 = microtime(true);
 
