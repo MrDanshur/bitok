@@ -1,17 +1,17 @@
 <?php
 $start = microtime(true);
-$url = "https://wex.nz/api/3/info?hidden=0";
+$urlPairs = "https://wex.nz/api/3/info?hidden=0";
 
 $ch = curl_init();
 // GET запрос указывается в строке URL
-curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_URL, $urlPairs);
 curl_setopt($ch, CURLOPT_HEADER, false);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 curl_setopt($ch, CURLOPT_USERAGENT, 'PHP Bot (http://mysite.ru)');
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 $data = curl_exec($ch);
-curl_close($ch);
+//curl_close($ch);
 
 $end = microtime(true);
 $jsonPairs = json_decode($data, true);
@@ -20,11 +20,15 @@ $jsonPairs = json_decode($data, true);
 //var_dump($jsonPairs->pairs->eur_usd);
 //var_dump($jsonPairs["pairs"]["btc_usd"]["min_amount"]);
 $combinations = [];
+$strUrl = "";
+
 foreach ($jsonPairs["pairs"] as $pairKey => $pairValues) {
     if (!isToken($pairKey)) {
         [$combinations[$pairKey]["d"], $combinations[$pairKey]["r"]] = explode("_", $pairKey);
+        $strUrl .= $pairKey . "-";
     }
 }
+
 
 
 //print_r($combinations);
@@ -38,6 +42,14 @@ $i = 0;
 $j = 0;
 
 $startCur = "usd";
+//$startCur = "btc";
+//$startCur = "eth";
+//$startCur = "zec";
+//$startCur = "dsh";
+//$startCur = "nmc";
+//$startCur = "nvc";
+//$startCur = "ltc";
+
 $possible = [];
 $countPairs = count($jsonPairs["pairs"]);
 while ($i < $countPairs) {
@@ -117,7 +129,46 @@ foreach ($chains as $kChain => $vChains) {
     }
 }
 sort($chains);
-print_r($chains);
+//print_r($chains);
+
+$urlCurrentPos = "https://wex.nz/api/3/depth/" .  substr($strUrl, 0, -1) . "?limit=1";
+curl_setopt($ch, CURLOPT_URL, $urlCurrentPos);
+$depth = curl_exec($ch);
+curl_close($ch);
+$jsonDepth = json_decode($depth, true);
+//print_r($jsonDepth);
+$startSum = 10; //10 usd
+$profits = [];
+foreach ($chains as $kChain => $vChains) {
+    $num = count($vChains);
+    $result = $startSum;
+    $str = "10";
+
+    for ($i = 0; $i < $num-1; $i++) {
+        $pairD = $vChains[$i] . "_" . $vChains[$i + 1];
+        $pairR = $vChains[$i+1] . "_" . $vChains[$i];
+//        echo $pairR . PHP_EOL;
+        if (array_key_exists($pairD, $jsonDepth)) {
+            $result = ($result * (float)$jsonDepth[$pairD]["bids"][0][0]) * 0.998;
+            $str = $str . " * " . $jsonDepth[$pairD]["bids"][0][0];
+//            print_r($jsonDepth[$pairD]["bids"][0][0]);
+        }
+        if (array_key_exists($pairR, $jsonDepth)) {
+//            print_r($jsonDepth[$pairR]["asks"][0][0]);
+            $result = ($result / (float)$jsonDepth[$pairR]["asks"][0][0]) * 0.998;
+            $str = $str . " / " . $jsonDepth[$pairR]["asks"][0][0];
+        }
+    }
+    $profits[] = $result;
+//    echo $result . PHP_EOL;
+//    echo $str . PHP_EOL;
+//    print_r($vChains);
+//    die();
+
+}
+echo max($profits) . PHP_EOL;
+echo min($profits) . PHP_EOL;
+
 
 
 $end2 = microtime(true);
